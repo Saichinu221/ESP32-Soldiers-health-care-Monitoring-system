@@ -1,0 +1,88 @@
+#define BLYNK_TEMPLATE_ID "TMPL3BT9tJFeW" 
+#define BLYNK_TEMPLATE_NAME "IOT HEALTH  SOLIDIERS" #define BLYNK_AUTH_TOKEN "FoKgTVwxJ5iSMY1LGevN0ubGNAhwVJ76" char auth[] = BLYNK_AUTH_TOKEN; 
+#include<SoftwareSerial.h> 
+//#define BLYNK_PRINT Serial 
+#include <WiFi.h> 
+#include <BlynkSimpleEsp32.h> 
+//#include <Ethernet.h> 
+BlynkTimer timer; // Your WiFi credentials. char ssid[] = "ABCDE"; char pass[] = "123456789"; 
+#include<LiquidCrystal_I2C.h> 
+LiquidCrystal_I2C lcd(0x27,16,2); 
+                #include <TinyGPS++.h> #include <SoftwareSerial.h> static const uint32_t GPSBaud = 9600; 
+TinyGPSPlus gps; 
+
+SoftwareSerial GPS_SoftSerial(3, 1);/* (Rx, Tx) */ 
+int i =0; int j=0; float Lat, Lon; 
+#include <OneWire.h> 
+#include <DallasTemperature.h> 
+#include <Wire.h> 
+#define ONE_WIRE_BUS 18 
+OneWire oneWire(ONE_WIRE_BUS); 
+DallasTemperature sensors(&oneWire); 
+// Pass our oneWire reference to Dallas Temperature. 
+ #define USE_ARDUINO_INTERRUPTS 
+#include <PulseSensorPlayground.h 
+int PulseWire = 33;       const int LED13 = 13;          
+int Threshold = 550;                 
+PulseSensorPlayground pulseSensor;  int myBPM; 
+String st,st1; 
+#define Switch 19 void setup() 
+{ 
+  Serial.begin(9600); 
+  Blynk.begin(auth, ssid, pass);   lcd.init();   lcd.begin(16,2);   lcd.backlight();  
+  GPS_SoftSerial.begin(GPSBaud);  
+  Serial.println("DeviceExample.ino"); 
+  Serial.println("A simple demonstration of TinyGPSPlus with an attached GPS module"); 
+  Serial.print("Testing TinyGPSPlus library v. ");   Serial.println(TinyGPSPlus::libraryVersion());   pulseSensor.analogInput(PulseWire);    
+  pulseSensor.blinkOnPulse(LED13);       pulseSensor.setThreshold(Threshold);    
+   if (pulseSensor.begin()) { 
+    Serial.println("We created a pulseSensor Object !");  
+  }   lcd.clear();   lcd.setCursor(0,0 lcd.print(" IOT BASED ");   lcd.setCursor(0,1);   lcd.print(" HEALTH CARE "); 
+  delay(2000);   lcd.clear();   lcd.setCursor(0,0);   lcd.print("MONITORING AND"); 
+  lcd.setCursor(0,1);   lcd.print(" TRACKING SYSTEM ");   delay(2000);   lcd.clear(); lcd.setCursor(0,0);   lcd.print(" FOR SOLDIERS ");   lcd.setCursor(0,1);   lcd.print("  USING ESP32 ");   delay(2000); 
+} void loop() {   int Switch_state = digitalRead(Switch); 
+  Serial.print("Switch_state ");                        
+Serial.println(Switch_state); 
+  lcd.clear();   lcd.setCursor(0,0);   lcd.print("Switch_state:");   lcd.setCursor(0,1);   lcd.print(Switch_state); delay(1000);   if(Switch_state == 0) 
+  { 
+    smartDelay(1000); //smartDelay 
+    Lat = gps.location.lat();
+Lon = gps.location.lng
+lcd.clear();    
+ lcd.setCursor(0,0);  
+lcd.print("Lat ");     lcd.print(gps.location.lat(), 6);     Blynk.virtualWrite(V0, Lat);     delay(1000);     lcd.clear();     lcd.setCursor(1,0); lcd.print("Lon ");      lcd.print(gps.location.lng(), 6);       Blynk.virtualWrite(V1, Lon);     delay(1000); 
+  }   
+               sensors.requestTemperatures();
+float tempC = sensors.getTempCByIndex(0); 
+  if(tempC != DEVICE_DISCONNECTED_C) 
+  { 
+    Serial.print("Temperature for the device 1 (index 0) is: ");     Serial.println(tempC);     lcd.clear();  lcd.setCursor(0,0);     lcd.print("TEMPERATURE:"); 
+    lcd.setCursor(0,1); 
+    lcd.print(tempC); 
+    Blynk.virtualWrite(V2, tempC);     delay(1000); 
+   } 
+   if(tempC > 32) 
+   { 
+    Serial.print("Temperature increased");     lcd.clear();     lcd.setCursor(0,0);     lcd.print("TEMPERATURE"); 
+    lcd.setCursor(0,1);     lcd.print("INCREASED");     delay(1000); 
+  } 
+  myBPM = pulseSensor.getBeatsPerMinute();
+if (pulseSensor.sawStartOfBeat())             
+  { 
+    //Serial.println("♥  A HeartBeat Happened ! "); 
+    Serial.print("BPM: ");                        
+Serial.println(myBPM/2); 
+    lcd.clear();     lcd.print("BPM:");     lcd.setCursor(0,1);     lcd.print(myBPM/2); 
+    Blynk.virtualWrite(V3, myBPM/2);     delay(1000); 
+  } 
+			else 
+  { 
+    Serial.println(" myBPM is not Happend");     delay(500); 
+  } 
+     Blynk.run();timer.run();  
+} static void smartDelay(unsigned long ms) 
+{   unsigned long start = millis();   do  
+  { 
+    while (GPS_SoftSerial.available())  
+  } while (millis() - start < ms); 
+} 
